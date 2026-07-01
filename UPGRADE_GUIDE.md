@@ -1,10 +1,11 @@
 # Upgrade Guide
 
-1. Backup current FALTAH-Enterprise.
-2. Extract this ZIP.
-3. Copy all files to FALTAH-Enterprise.
-4. Replace old files.
-5. Commit and push.
+Replace only the application files in FALTAH-Enterprise. Do not replace Knowledge or Media repositories.
 
-Do not upload knowledge videos here. Use FALTAH-Knowledge.
-Do not upload branding master assets here. Use FALTAH-Media.
+Files to update:
+- index.html
+- style.css
+- app.js
+- README.md
+- RELEASE_NOTES.md
+- UPGRADE_GUIDE.md

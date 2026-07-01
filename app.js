@@ -36,8 +36,29 @@ function icon(cat=''){return {'Rotating Equipment':'⚙️','Process Systems':'�
 function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function openPage(id){$$('.page').forEach(p=>p.classList.toggle('active',p.id===id)); $$('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===id)); $('#pageTitle').textContent = id==='dashboard'?'Dashboard':$('.nav[data-page="'+id+'"]').textContent.trim().replace(/^\S+\s?/,''); window.scrollTo({top:0,behavior:'smooth'});}
 function openLesson(id){const l=lessons.find(x=>x.id===id); if(!l)return; const video=absUrl(CONFIG.knowledgeRepo,l.videoUrl||''); const docs=(l.documents||[]).map(d=>`<a class="doc-link" target="_blank" href="${absUrl(CONFIG.knowledgeRepo,d)}">📄 ${esc(d.split('/').pop())}</a>`).join(''); let player='<div class="video-box">No video added yet</div>'; if(video){ player = isYouTube(video)?`<div class="video-box"><iframe src="${youtubeEmbed(video)}" allowfullscreen></iframe></div>`:`<div class="video-box"><video controls playsinline src="${video}"></video></div>`; } $('#dialogContent').innerHTML=`<div class="dialog-inner"><span class="meta">${esc(l.category)} • ${esc(l.equipment||'')}</span><h1>${esc(l.title)}</h1><p>${esc(l.summary||'')}</p>${player}<h3>Smart Answer</h3><p>${esc(l.smartAnswer||'No smart answer available yet.')}</p><h3>Documents</h3>${docs||'<p>No documents added yet.</p>'}</div>`; $('#lessonDialog').showModal();}
-function openEquipment(name){currentFilter='All'; openPage('library'); $('#librarySearch').value=name; renderLibrary();}
+
+function openEquipment(name){
+  const related = lessons.filter(l => (l.equipment || '').toLowerCase() === String(name).toLowerCase());
+  const first = related[0] || {};
+  const cards = related.map(l => `<article class="lesson card" data-lesson="${l.id}"><div class="thumb">${icon(l.category)}</div><span class="meta">${esc(l.category)} • ${esc(l.duration||'')}</span><h4>${esc(l.title)}</h4><p>${esc(l.summary||'')}</p><small>${esc(l.provider||'')}</small></article>`).join('');
+  $('#dialogContent').innerHTML = `<div class="dialog-inner equipment-detail">
+    <span class="meta">${esc(first.category || 'Equipment')}</span>
+    <h1>${esc(name)}</h1>
+    <p>${esc(first.summary || 'Equipment details and related knowledge lessons will appear here.')}</p>
+    <div class="equipment-sections">
+      <div><b>Overview</b><span>Purpose, function, and operating concept.</span></div>
+      <div><b>How It Works</b><span>Working principle and process role.</span></div>
+      <div><b>Components</b><span>Main parts, instruments, and controls.</span></div>
+      <div><b>Troubleshooting</b><span>Common issues, causes, and checks.</span></div>
+      <div><b>Knowledge Films</b><span>Videos linked to this equipment.</span></div>
+      <div><b>Documents</b><span>Procedures, manuals, and references.</span></div>
+    </div>
+    <h3>Related Lessons</h3>
+    <div class="grid">${cards || '<div class="card" style="padding:18px">No related lessons yet.</div>'}</div>
+  </div>`;
+  $('#lessonDialog').showModal();
+}
 function smartAnswer(q){q=q.toLowerCase(); const scored=lessons.map(l=>{const text=[l.title,l.equipment,l.category,l.summary,l.smartAnswer,(l.keywords||[]).join(' ')].join(' ').toLowerCase(); const score=q.split(/\s+/).filter(w=>w.length>2 && text.includes(w)).length + (text.includes(q)?5:0); return {l,score};}).sort((a,b)=>b.score-a.score); const best=scored[0]; if(!best||best.score===0) return `<h3>No knowledge available yet</h3><p>I could not find a matching topic in the current knowledge repository. Add keywords and a smart answer in <b>FALTAH-Knowledge/data/lessons.json</b>.</p>`; return `<h3>${esc(best.l.title)}</h3><p>${esc(best.l.smartAnswer||best.l.summary)}</p><p><b>Related equipment:</b> ${esc(best.l.equipment||'')}</p><button data-lesson="${best.l.id}" class="primary">Open Lesson</button>`;}
-document.addEventListener('click',e=>{const nav=e.target.closest('[data-page]'); if(nav) openPage(nav.dataset.page); const jump=e.target.closest('[data-jump]'); if(jump) openPage(jump.dataset.jump); const lesson=e.target.closest('[data-lesson]'); if(lesson) openLesson(lesson.dataset.lesson); const eq=e.target.closest('[data-equipment]'); if(eq) openEquipment(eq.dataset.equipment); const fil=e.target.closest('[data-filter]'); if(fil){currentFilter=fil.dataset.filter; renderLibrary();}});
+document.addEventListener('click',e=>{const nav=e.target.closest('[data-page]'); if(nav) openPage(nav.dataset.page); const jump=e.target.closest('[data-jump]'); if(jump) openPage(jump.dataset.jump); const eq=e.target.closest('[data-equipment]'); if(eq){ openEquipment(eq.dataset.equipment); return; } const lesson=e.target.closest('[data-lesson]'); if(lesson) openLesson(lesson.dataset.lesson); const fil=e.target.closest('[data-filter]'); if(fil){currentFilter=fil.dataset.filter; renderLibrary();}});
 $('#closeDialog').onclick=()=>$('#lessonDialog').close(); $('#equipmentSearch').oninput=renderEquipment; $('#librarySearch').oninput=renderLibrary; $('#refreshBtn').onclick=loadLessons; $('#askBtn').onclick=()=>{$('#answerBox').innerHTML=smartAnswer($('#askInput').value);}; $('#themeBtn').onclick=()=>{theme=theme==='dark'?'light':'dark';localStorage.setItem('faltah_theme',theme);document.body.classList.toggle('light',theme==='light');}; $('#saveSettings').onclick=()=>{localStorage.setItem('faltah_repo_settings',JSON.stringify({knowledgeRepo:$('#knowledgeUrl').value,mediaRepo:$('#mediaUrl').value}));alert('Saved. Refreshing...');location.reload();};
 window.addEventListener('load',()=>{document.body.classList.toggle('light',theme==='light'); applyBranding(); loadLessons(); setTimeout(()=>$('#splash').classList.add('hide'),800); if('serviceWorker'in navigator) navigator.serviceWorker.register('./service-worker.js').catch(()=>{});});
