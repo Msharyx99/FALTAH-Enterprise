@@ -1,0 +1,36 @@
+
+/* FALTAH classic mobile frame safety */
+html, body {
+  margin: 0;
+  background: #0b1020;
+}
+#root {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #070d1a;
+  overflow-x: hidden;
+}
+
+
+/* FALTAH v2.0 character identity and motion */
+@keyframes faltah-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.015); }
+}
+@keyframes faltah-glow {
+  0%, 100% { box-shadow: 0 0 18px rgba(212,175,55,0.12); }
+  50% { box-shadow: 0 0 34px rgba(212,175,55,0.32); }
+}
+@keyframes faltah-pulse-ring {
+  0% { transform: scale(.92); opacity: .7; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+.faltah-character-float { animation: faltah-float 4s ease-in-out infinite; }
+.faltah-character-glow { animation: faltah-glow 3.2s ease-in-out infinite; }
+.faltah-splash-gradient {
+  background:
+    radial-gradient(circle at 50% 20%, rgba(212,175,55,.16), transparent 30%),
+    linear-gradient(165deg, #080F1C 0%, #0A1525 55%, #080F1C 100%);
+}
