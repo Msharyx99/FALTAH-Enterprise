@@ -17,9 +17,8 @@ concurrency:
 
 jobs:
   deploy:
-  timeout-minutes: 25
-    
-  environment:
+    timeout-minutes: 25
+    environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
@@ -27,29 +26,29 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund --prefer-offline
+        run: npm ci --no-audit --no-fund
         timeout-minutes: 15
 
       - name: Build FALTAH
         run: npm run build
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v5
 
       - name: Upload production build
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
       - name: Deploy website
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4
