@@ -17,7 +17,7 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
-  base: '/FALTAH-Enterprise/',
+  base: "/",
   
   plugins: [
     figmaAssetResolver(),
