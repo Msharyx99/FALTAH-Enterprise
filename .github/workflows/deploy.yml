@@ -17,7 +17,9 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
+  timeout-minutes: 25
+    
+  environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
@@ -34,7 +36,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-audit --no-fund --prefer-offline
+        timeout-minutes: 15
 
       - name: Build FALTAH
         run: npm run build
