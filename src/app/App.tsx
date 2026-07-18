@@ -333,6 +333,7 @@ function getHomepageConfig(settingsItems: any[] = []) {
     subtitle: first.subtitle || "Enterprise",
     badge: first.badge || "Digital Knowledge Platform",
     recentCount: Number(first.recentCount || 4),
+    recentDays: Number(first.recentDays ||20),
     popularCount: Number(first.popularCount || 4),
     autoUpdatePopular: first.autoUpdatePopular !== false,
     popularMinViews: Number(first.popularMinViews || 0),
@@ -343,12 +344,42 @@ function getHomepageConfig(settingsItems: any[] = []) {
   };
 }
 
-function timestampToMillis(value:any) {
+function timestampToMillis(value: any) {
   if (!value) return 0;
-  if (typeof value?.toMillis === "function") return value.toMillis();
-  if (typeof value?.seconds === "number") return value.seconds * 1000;
+
+  if (typeof value?.toMillis === "function") {
+    return value.toMillis();
+  }
+
+  if (typeof value?.seconds === "number") {
+    return value.seconds * 1000;
+  }
+
   const parsed = new Date(value).getTime();
+
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isRecentlyAdded(resource: any, recentDays = 20) {
+  const createdTime = timestampToMillis(resource?.createdAt);
+
+  if (!createdTime) {
+    return false;
+  }
+
+  const ageInMilliseconds = Date.now() - createdTime;
+
+  const recentWindow =
+    Math.max(1, Number(recentDays || 20)) *
+    24 *
+    60 *
+    60 *
+    1000;
+
+  return (
+    ageInMilliseconds >= 0 &&
+    ageInMilliseconds <= recentWindow
+  );
 }
 
 function popularityScore(resource:any, homepage:any) {
@@ -1718,6 +1749,20 @@ function HomePage({
   const resourceData = buildResourceData(firebaseVideos, []).filter((r:any) => r.type === "video");
   const homepage = getHomepageConfig(homepageSettings);
   const popularTechnicalVideos = getPopularTechnicalVideos(resourceData, homepage).slice(0, homepage.popularCount);
+  const recentlyAddedVideos = resourceData
+  .filter((resource: any) =>
+    isRecentlyAdded(resource, homepage.recentDays)
+  )
+  .sort(
+    (first: any, second: any) =>
+      timestampToMillis(second.createdAt) -
+      timestampToMillis(first.createdAt)
+  )
+  .slice(0, homepage.recentCount)
+  .map((resource: any) => ({
+    ...resource,
+    new: true,
+  }));
   const [ready, setReady] = useState(false);
   useEffect(() => { const t = setTimeout(() => setReady(true), 60); return () => clearTimeout(t); }, []);
 
@@ -1830,11 +1875,23 @@ function HomePage({
 
       {/* Recently Added */}
       <div className="mt-8">
-        <SectionHead title="Recently Added" action="See all" onAction={() => setNav("library")}/>
-        <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
-          {resourceData.filter(r => r.new).slice(0, homepage.recentCount).map(r => <div key={r.id} className="flex-shrink-0 w-52"><ResourceCard r={r} compact/></div>)}
-        </div>
-      </div>
+       <SectionHead
+    title="Recently Added"
+    action="See all"
+    onAction={() => setNav("library")}
+  />
+
+  <div
+    className="flex gap-3 overflow-x-auto px-4 pb-1"
+    style={{ scrollbarWidth: "none" }}
+  >
+    {recentlyAddedVideos.map((r: any) => (
+  <div key={r.id} className="flex-shrink-0 w-52">
+    <ResourceCard r={r} compact />
+  </div>
+))}
+  </div>
+</div>
 
       {/* Popular Videos */}
       <div className="mt-8">
