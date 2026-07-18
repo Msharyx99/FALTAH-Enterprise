@@ -233,7 +233,7 @@ function buildResourceData(firebaseVideos: any[] = [], firebaseDocuments: any[] 
     ...firebaseVideos.filter(v => v.live !== false).map(v => normalizeResourceItem(v, "video")),
     ...firebaseDocuments.filter(d => d.live !== false).map(d => normalizeResourceItem(d, "document")),
   ];
-  return dynamic.length > 0 ? dynamic : RESOURCES;
+  return dynamic;
 }
 
 function iconForTreeItem(value: any, fallback: any = Layers) {
